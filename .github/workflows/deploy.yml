@@ -1,0 +1,46 @@
+name: Deploy Static HTML Site
+
+on:
+  push:
+    branches:
+      - main  # Asegúrate de que esta es tu rama principal
+  workflow_dispatch:
+
+# Configuración de permisos
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Permite una única ejecución simultánea
+concurrency:
+  cancel-in-progress: true
+  group: pages
+
+jobs:
+  # 1. Job de "Deploy" (Despliegue)
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      # Descarga tu código
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      # 2. Configura el servicio de GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      # 3. Sube el repositorio completo como artefacto
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Indica que el directorio raíz ('./') contiene todos los archivos estáticos
+          path: './' 
+
+      # 4. Despliega el artefacto a GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
